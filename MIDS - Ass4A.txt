@@ -1,0 +1,62 @@
+import numpy as np
+import pandas as pd
+
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
+
+column_names = ['Sex', 'Length', 'Diameter', 'Height', 'WholeWeight', 
+                'ShuckedWeight', 'VisceraWeight', 'ShellWeight', 'Rings']
+df = pd.read_csv("copy path", names=column_names)
+
+df.sample(5)
+
+/******************* RUN ******************/
+
+df.info()
+
+/******************* RUN ******************/
+
+df.isnull().sum()
+
+/******************* RUN ******************/
+
+df.describe()
+
+/******************* RUN ******************/
+
+label_encoder = LabelEncoder()
+df['Sex'] = label_encoder.fit_transform(df['Sex'])
+df['Sex'] = df['Sex'].astype('float')
+
+df.sample(10)
+
+/******************* RUN ******************/
+
+X = df.drop('Rings', axis=1)
+y = df['Rings']
+
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42)
+
+model = LinearRegression()
+model.fit(X_train, y_train)
+y_pred = model.predict(X_test)
+
+# Evaluate the model
+mse = mean_squared_error(y_test, y_pred)
+mae = mean_absolute_error(y_test, y_pred)
+r2 = r2_score(y_test, y_pred)
+
+print("Mean Squared Error:", mse)
+print("Mean Absolute Error:", mae)
+print("R-squared:", r2)
+
+/******************* RUN ******************/
+
+test = [[1.0,0.450,0.350,0.120,0.4680,0.2005,0.1065,0.1325]]
+predict = model.predict(test)
+print(int(predict[0]))
