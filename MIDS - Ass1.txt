@@ -112,4 +112,80 @@ df.sample(5)
 /******************** RUN ************************/
 
 
+************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************
+
+import numpy as np  # Import NumPy for numerical computations
+import pandas as pd  # Import Pandas for data manipulation
+import matplotlib.pyplot as plt  # Import Matplotlib for plotting
+import seaborn as sns  # Import Seaborn for statistical data visualization
+
+from sklearn.preprocessing import LabelEncoder, StandardScaler  # Import LabelEncoder and StandardScaler for preprocessing
+from sklearn.impute import SimpleImputer  # Import SimpleImputer for handling missing values
+from sklearn.model_selection import train_test_split  # Import train_test_split for splitting data
+
+df = pd.read_csv('/content/titanic.csv')  # Read Titanic dataset into a Pandas DataFrame
+df.shape  # Check the shape of the DataFrame
+
+# Display a random sample of 10 rows from the DataFrame
+df.sample(10)
+
+# Display information about the DataFrame, including data types and non-null counts
+df.info()
+
+# Check for missing values in each column and display the sum of missing values
+df.isnull().sum()
+
+# Generate descriptive statistics for numerical columns in the DataFrame
+df.describe()
+
+# Print the unique value count for each column in the DataFrame
+for x in df.columns:
+    print([x, df[x].nunique()])
+
+# Define a list of cabin decks and functions to extract substring and title from strings
+
+# Create new columns 'Deck' and 'Title' based on extracted information from 'Cabin' and 'Name'
+df['Deck'] = df['Cabin'].map(lambda x: search_substring(str(x), cabin_list))
+df['Title'] = df['Name'].apply(get_title)
+
+# Drop unnecessary columns from the DataFrame
+df = df.drop(columns=['PassengerId','Name','Ticket','Cabin'], axis=1)
+
+# Select object (categorical) and numerical columns from the DataFrame
+df_obj = df.select_dtypes(include=['object'])
+df_num = df.select_dtypes(exclude=['object'])
+
+# Impute missing values in numerical columns with the median using SimpleImputer
+num_imputer = SimpleImputer(strategy="median")
+df["Age"] = num_imputer.fit_transform(df[["Age"]])
+df["Fare"] = num_imputer.fit_transform(df[["Fare"]])
+
+# Impute missing values in categorical column 'Embarked' with the most frequent value
+cat_imputer = SimpleImputer(strategy="most_frequent")
+imputed_embarked = cat_imputer.fit_transform(df[["Embarked"]])
+df["Embarked"] = pd.Series(imputed_embarked.flatten(), name="Embarked")
+
+# Display a random sample of 10 rows from the updated DataFrame
+df.sample(10)
+
+# Encode categorical variables using LabelEncoder
+label_encoder = LabelEncoder()
+for c in df_obj.columns:
+    df[c] = label_encoder.fit_transform(df[c])
+
+# Display a random sample of 10 rows from the updated DataFrame with encoded categorical variables
+df.sample(10)
+
+# Standardize numerical features 'Age' and 'Fare' using StandardScaler
+scaler = StandardScaler()
+df[["Age", "Fare"]] = scaler.fit_transform(df[["Age", "Fare"]])
+
+# Split the data into features (X) and target (y) for model training and testing
+X = df.drop("Survived", axis=1)
+y = df["Survived"]
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Display a random sample of 5 rows from the final DataFrame used for model training and testing
+df.sample(5)
+ 
 

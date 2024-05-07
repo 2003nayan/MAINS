@@ -241,3 +241,250 @@ plt.show()
 
 /************************** RUN *******************************/
 
+
+*********************************************************************************************************************
+*********************************************************************************************************************
+*********************************************************************************************************************
+*********************************************************************************************************************
+*********************************************************************************************************************
+
+import re  # Import regular expression module for text processing
+import numpy as np  # Import NumPy for numerical computations
+import pandas as pd  # Import Pandas for data manipulation
+# plotting
+import seaborn as sns  # Import Seaborn for data visualization
+from wordcloud import WordCloud  # Import WordCloud for generating word clouds
+import matplotlib.pyplot as plt  # Import Matplotlib for plotting
+# nltk
+from nltk.stem import WordNetLemmatizer  # Import NLTK for text processing
+# sklearn
+from sklearn.model_selection import train_test_split  # Import train_test_split for splitting data
+from sklearn.feature_extraction.text import TfidfVectorizer  # Import TfidfVectorizer for text vectorization
+from sklearn.metrics import confusion_matrix, classification_report  # Import metrics for model evaluation
+
+# Importing the dataset
+DATASET_COLUMNS=['target','ids','date','flag','user','text']  # Define column names
+DATASET_ENCODING = "ISO-8859-1"  # Define encoding format
+df = pd.read_csv('/content/Twitter_dataset.csv', encoding=DATASET_ENCODING, names=DATASET_COLUMNS)  # Read CSV file into Pandas DataFrame
+df.sample(5)  # Display a sample of 5 rows from the DataFrame
+
+/************************** RUN *******************************/
+
+df.head()  # Display the first few rows of the DataFrame
+
+/************************** RUN *******************************/
+
+df.columns  # Display column names of the DataFrame
+
+/************************** RUN *******************************/
+
+print("Length of the data: {}".format(len(df)))  # Print the length of the DataFrame
+
+/************************** RUN *******************************/
+
+df.shape  # Display the shape of the DataFrame
+
+/************************** RUN *******************************/
+
+df.info()  # Display information about the DataFrame
+
+/************************** RUN *******************************/
+
+df.dtypes  # Display data types of columns in the DataFrame
+
+/************************** RUN *******************************/
+
+np.sum(df.isnull().any(axis=1))  # Check for null values in the DataFrame
+
+/************************** RUN *******************************/
+
+print("Count of columns in the data {}".format(len(df.columns)))  # Print count of columns
+print("Count of rows in the data {}".format(len(df)))  # Print count of rows
+
+/************************** RUN *******************************/
+
+df['target'].unique()  # Get unique values in the 'target' column
+
+/************************** RUN *******************************/
+
+df['target'].nunique()  # Get number of unique values in the 'target' column
+
+/************************** RUN *******************************/
+
+# Plotting the distribution for dataset.
+ax = df.groupby('target').count().plot(kind='bar', title='Distribution of data',legend=False)  # Group by 'target' and plot distribution
+ax.set_xticklabels(['Negative','Positive'], rotation=0)  # Set x-axis labels
+# Storing data in lists.
+text, sentiment = list(df['text']), list(df['target'])  # Store 'text' and 'target' columns in lists
+
+/************************** RUN *******************************/
+
+import seaborn as sns  # Re-import Seaborn for plotting
+sns.countplot(x='target', data=df)  # Plot count of 'target' values
+
+/************************** RUN *******************************/
+
+data = df[['text','target']]  # Select 'text' and 'target' columns
+
+data['target'] = data['target'].replace(4,1)  # Replace '4' with '1' in 'target' column
+
+data.sample(10)  # Display a sample of 10 rows from the DataFrame
+
+/************************** RUN *******************************/
+
+data['target'].unique()  # Get unique values in the modified 'target' column
+
+/************************** RUN *******************************/
+
+data_pos = data[data['target'] == 1]  # Filter rows where 'target' is 1
+data_neg = data[data['target'] == 0]  # Filter rows where 'target' is 0
+
+data_pos = data_pos.iloc[:int(2000)]  # Select first 2000 rows from positive data
+data_neg = data_neg.iloc[:int(2000)]  # Select first 2000 rows from negative data
+
+dataset = pd.concat([data_pos, data_neg])  # Concatenate positive and negative data
+
+dataset['text'] = dataset['text'].str.lower()  # Convert 'text' column to lowercase
+dataset.tail()  # Display the last few rows of the dataset
+
+/************************** RUN *******************************/
+
+# Define a list of stopwords
+stopwordlist = ['a', 'about', 'above', 'after', 'again', 'ain', 'all', 'am', 'an', ...]
+STOPWORDS = set(stopwordlist)  # Convert stopwordlist to a set for efficient lookup
+
+# Function to remove stopwords from text
+def cleaning_stopwords(text):
+    return " ".join([word for word in str(text).split() if word not in STOPWORDS])
+dataset['text'] = dataset['text'].apply(lambda text: cleaning_stopwords(text))  # Apply cleaning_stopwords to 'text' column
+dataset['text'].head()  # Display the cleaned 'text' column
+
+/************************** RUN *******************************/
+
+# Define a list of punctuation symbols
+import string
+english_punctuations = string.punctuation
+punctuations_list = english_punctuations
+
+# Function to remove punctuations from text
+def cleaning_punctuations(text):
+    translator = str.maketrans('', '', punctuations_list)
+    return text.translate(translator)
+dataset['text']= dataset['text'].apply(lambda x: cleaning_punctuations(x))  # Apply cleaning_punctuations to 'text' column
+dataset['text'].tail()  # Display the cleaned 'text' column
+
+/************************** RUN *******************************/
+
+# Function to clean repeating characters in text
+def cleaning_repeating_char(text):
+    return re.sub(r'(.)1+', r'1', text)
+dataset['text'] = dataset['text'].apply(lambda x: cleaning_repeating_char(x))  # Apply cleaning_repeating_char to 'text' column
+dataset['text'].tail()  # Display the cleaned 'text' column
+
+/************************** RUN *******************************/
+
+# Function to clean URLs from text
+def cleaning_URLs(data):
+    return re.sub('((www.[^s]+)|(https?://[^s]+))',' ',data)
+dataset['text'] = dataset['text'].apply(lambda x: cleaning_URLs(x))  # Apply cleaning_URLs to 'text' column
+dataset['text'].tail()  # Display the cleaned 'text' column
+
+/************************** RUN *******************************/
+
+# Function to clean numbers from text
+def cleaning_numbers(data):
+    return re.sub('[0-9]+', '', data)
+dataset['text'] = dataset['text'].apply(lambda x: cleaning_numbers(x))  # Apply cleaning_numbers to 'text' column
+dataset['text'].tail()  # Display the cleaned 'text' column
+
+/************************** RUN *******************************/
+
+from nltk.tokenize import RegexpTokenizer  # Import RegexpTokenizer from NLTK
+
+tokenizer = RegexpTokenizer(r'w+')  # Create a RegexpTokenizer
+dataset['text'] = dataset['text'].apply(tokenizer.tokenize)  # Apply tokenization to 'text' column
+dataset['text'].head()  # Display the tokenized 'text' column
+
+/************************** RUN *******************************/
+
+import nltk  # Import NLTK
+st = nltk.PorterStemmer()  # Initialize PorterStemmer from NLTK
+
+# Function to perform stemming on text
+def stemming_on_text(data):
+    text = [st.stem(word) for word in data]
+    return text
+dataset['text']= dataset['text'].apply(lambda x: stemming_on_text(x))  # Apply stemming_on_text to 'text' column
+dataset['text'].head()  # Display the stemmed 'text' column
+
+/************************** RUN *******************************/
+
+import nltk  # Re-import NLTK
+nltk.download('wordnet')  # Download WordNet dataset from NLTK
+
+lm = nltk.WordNetLemmatizer()  # Initialize WordNetLemmatizer from NLTK
+
+# Function to perform lemmatization on text
+def lemmatizer_on_text(data):
+    text = [lm.lemmatize(word) for word in data]
+    return text
+dataset['text'] = dataset['text'].apply(lambda x: lemmatizer_on_text(x))  # Apply lemmatizer_on_text to 'text' column
+dataset['text'].head()  # Display the lemmatized 'text' column
+
+/************************** RUN *******************************/
+
+X=data.text  # Assign 'text' column to X
+y=data.target  # Assign 'target' column to y
+
+data_neg = data['text'][:8000]  # Select first 8000 rows from 'text' column
+plt.figure(figsize = (20,20))  # Create a figure with specified size
+wc = WordCloud(max_words = 1000 , width = 1600 , height = 800, collocations=False).generate(" ".join(data_neg))  # Generate WordCloud for negative data
+plt.imshow(wc)  # Display the WordCloud
+
+/************************** RUN *******************************/
+
+data_pos = data['text'][8000:]  # Select rows after 8000 from 'text' column
+wc = WordCloud(max_words = 1000 , width = 1600 , height = 800, collocations=False).generate(" ".join(data_pos))  # Generate WordCloud for positive data
+plt.figure(figsize = (20,20))  # Create a figure with specified size
+plt.imshow(wc)  # Display the WordCloud
+
+/************************** RUN *******************************/
+
+X_train, X_test, y_train, y_test = train_test_split(X,y,test_size = 0.05, random_state =26105111)  # Split data into training and testing sets
+
+vectoriser = TfidfVectorizer(ngram_range=(1,2), max_features=500000)  # Initialize TF-IDF Vectorizer
+vectoriser.fit(X_train)  # Fit Vectorizer on training data
+print('No. of feature_words: ', len(vectoriser.get_feature_names_out()))  # Print number of feature words
+
+/************************** RUN *******************************/
+
+plt.figure(figsize=(12, 10))  # Create a figure with specified size
+plt.plot(arrx, arry)  # Plot arrx and arry
+plt.show()  # Display the plot
+
+/************************** RUN *******************************/
+
+from sklearn.neighbors import KNeighborsClassifier  # Import K Nearest Neighbors classifier from Scikit-Learn
+
+model = KNeighborsClassifier(best_k)  # Initialize K Nearest Neighbors classifier
+model.fit(X_train, y_train)  # Fit the classifier on training data
+model_Evaluate(model)  # Evaluate the model
+y_pred = model.predict(X_test)  # Make predictions on test data
+
+/************************** RUN *******************************/
+
+from sklearn.metrics import roc_curve, auc  # Import ROC curve functions from Scikit-Learn
+fpr, tpr, thresholds = roc_curve(y_test, y_pred)  # Compute ROC curve
+roc_auc = auc(fpr, tpr)  # Compute ROC AUC score
+plt.figure()  # Create a new figure
+plt.plot(fpr, tpr, color='darkorange', lw=1, label='ROC curve (area = %0.2f)' % roc_auc)  # Plot ROC curve
+plt.xlim([0.0, 1.0])  # Set x-axis limits
+plt.ylim([0.0, 1.05])  # Set y-axis limits
+plt.xlabel('False Positive Rate')  # Set x-axis label
+plt.ylabel('True Positive Rate')  # Set y-axis label
+plt.title('ROC CURVE')  # Set title
+plt.legend(loc="lower right")  # Set legend location
+plt.show()  # Display the plot
+
+/************************** RUN *******************************/
+

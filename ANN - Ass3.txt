@@ -31,3 +31,41 @@ def backward_propagation(X, Y, A1, A2, W1, W2, b1, b2):
     dW1 = 1/m * np.dot(dZ1, X.T)
     db1 = 1/m * np.sum(dZ1, axis=1, keepdims=True)
     return dW1, db1, dW2, db2
+
+*************************************************************************************************************
+
+import numpy as np  # Import NumPy for numerical computations
+
+def sigmoid(z):
+    return 1 / (1 + np.exp(-z))  # Define the sigmoid activation function
+
+def initialize_parameters(input_size, hidden_size, output_size):
+    # Initialize weights and biases with random values
+    W1 = np.random.uniform(-1, 1, (hidden_size, input_size))  # Initialize weights for the first layer
+    b1 = np.random.uniform(-1, 1, (hidden_size, 1))  # Initialize biases for the first layer
+    W2 = np.random.uniform(-1, 1, (output_size, hidden_size))  # Initialize weights for the second layer
+    b2 = np.random.uniform(-1, 1, (output_size, 1))  # Initialize biases for the second layer
+    return W1, b1, W2, b2  # Return initialized parameters
+
+def forward_propagation(X, W1, b1, W2, b2):
+    Z1 = np.dot(W1, X) + b1  # Compute the pre-activation for the first layer
+    A1 = sigmoid(Z1)  # Compute the activation for the first layer using sigmoid function
+    Z2 = np.dot(W2, A1) + b2  # Compute the pre-activation for the second layer
+    A2 = sigmoid(Z2)  # Compute the activation for the second layer using sigmoid function
+    return A1, A2  # Return activations
+
+def compute_loss(Y, A2):
+    m = Y.shape[1]  # Get the number of training examples
+    # Compute the cross-entropy loss
+    loss = -1/m * np.sum(Y * np.log(A2) + (1 - Y) * np.log(1 - A2))
+    return loss  # Return the computed loss
+
+def backward_propagation(X, Y, A1, A2, W1, W2, b1, b2):
+    m = Y.shape[1]  # Get the number of training examples
+    dZ2 = A2 - Y  # Compute the gradient of the cost with respect to Z2
+    dW2 = 1/m * np.dot(dZ2, A1.T)  # Compute the gradient of the cost with respect to W2
+    db2 = 1/m * np.sum(dZ2, axis=1, keepdims=True)  # Compute the gradient of the cost with respect to b2
+    dZ1 = np.dot(W2.T, dZ2) * A1 * (1 - A1)  # Compute the gradient of the cost with respect to Z1
+    dW1 = 1/m * np.dot(dZ1, X.T)  # Compute the gradient of the cost with respect to W1
+    db1 = 1/m * np.sum(dZ1, axis=1, keepdims=True)  # Compute the gradient of the cost with respect to b1
+    return dW1, db1, dW2, db2  # Return computed gradients

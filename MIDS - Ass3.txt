@@ -98,3 +98,106 @@ prediction = classifier.predict(new_doc_tfidf)
 print("Predicted sentiment for the document:", prediction[0])
 
 /*********************** RUN **********************/
+
+***********************************************************************************************************************
+***********************************************************************************************************************
+***********************************************************************************************************************
+***********************************************************************************************************************
+***********************************************************************************************************************
+
+
+import nltk  # Import NLTK library
+import csv  # Import CSV library
+from nltk.tokenize import word_tokenize  # Import word_tokenize function from NLTK
+from nltk.corpus import stopwords  # Import stopwords from NLTK corpus
+from nltk.stem import WordNetLemmatizer  # Import WordNetLemmatizer from NLTK
+from nltk.corpus import opinion_lexicon  # Import opinion_lexicon from NLTK corpus
+from sklearn.feature_extraction.text import TfidfVectorizer  # Import TfidfVectorizer from Scikit-Learn
+from sklearn.model_selection import train_test_split  # Import train_test_split function from Scikit-Learn
+from sklearn.svm import SVC  # Import Support Vector Classifier from Scikit-Learn
+from sklearn.metrics import accuracy_score  # Import accuracy_score function from Scikit-Learn
+
+# Download NLTK resources
+nltk.download('punkt')
+nltk.download('stopwords')
+nltk.download('wordnet')
+nltk.download('opinion_lexicon')
+
+/*********************** RUN **********************/
+
+# Sample polarity words
+positive_words = set(opinion_lexicon.positive())  # Set of positive words from opinion lexicon
+negative_words = set(opinion_lexicon.negative())  # Set of negative words from opinion lexicon
+
+# Function to preprocess text
+def preprocess_text(text):
+    tokens = word_tokenize(text.lower())  # Tokenize text and convert to lowercase
+    tokens = [word for word in tokens if word.isalpha() and word not in stopwords.words('english')]  # Remove stopwords and non-alphabetic tokens
+    lemmatizer = WordNetLemmatizer()  # Initialize WordNetLemmatizer
+    tokens = [lemmatizer.lemmatize(word) for word in tokens]  # Lemmatize tokens
+    return ' '.join(tokens)  # Join tokens back into a string
+
+documents = []  # Initialize empty list to store documents
+with open('/content/Reviews.csv', newline='', encoding='utf-8') as csvfile:  # Open CSV file
+    csv_reader = csv.reader(csvfile)  # Create CSV reader object
+    for row in csv_reader:  # Iterate over rows in CSV file
+        documents.append(row[0])  # Append text from first column to documents list
+
+documents  # Display the list of documents
+
+/*********************** RUN **********************/
+
+# Label the documents based on presence of polarity words
+labels = []  # Initialize empty list to store labels
+for doc in documents:  # Iterate over documents
+    preprocessed_doc = preprocess_text(doc)  # Preprocess document text
+    if any(word in preprocessed_doc for word in positive_words):  # Check if any positive word is present
+        labels.append('positive')  # Assign 'positive' label
+    elif any(word in preprocessed_doc for word in negative_words):  # Check if any negative word is present
+        labels.append('negative')  # Assign 'negative' label
+    else:
+        labels.append('neutral')  # If neither positive nor negative words are found, assign 'neutral' label
+
+labels  # Display the list of labels
+
+/*********************** RUN **********************/
+
+# Create TF-IDF vectorizer
+vectorizer = TfidfVectorizer()
+
+# Transform the documents into TF-IDF vectors
+tfidf_matrix = vectorizer.fit_transform(documents)
+
+# Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(tfidf_matrix, labels, test_size=0.2, random_state=42)
+
+# Initialize and train the Support Vector Machine classifier
+classifier = SVC(kernel='linear')
+classifier.fit(X_train, y_train)
+
+# Predict the labels for the test set
+y_pred = classifier.predict(X_test)
+
+# Calculate accuracy
+accuracy = accuracy_score(y_test, y_pred)
+print("Accuracy:", accuracy)
+
+/*********************** RUN **********************/
+
+# Example prediction
+new_document = "I had bad experience"
+preprocessed_new_doc = preprocess_text(new_document)
+new_doc_tfidf = vectorizer.transform([preprocessed_new_doc])
+prediction = classifier.predict(new_doc_tfidf)
+print("Predicted sentiment for the document:", prediction[0])
+
+/*********************** RUN **********************/
+
+# Example prediction
+new_document = "I had good breakfast in my home"
+preprocessed_new_doc = preprocess_text(new_document)
+new_doc_tfidf = vectorizer.transform([preprocessed_new_doc])
+prediction = classifier.predict(new_doc_tfidf)
+print("Predicted sentiment for the document:", prediction[0])
+
+/*********************** RUN **********************/

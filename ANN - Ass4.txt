@@ -65,3 +65,78 @@ for i in range(X.shape[0]):
 
 print("Final weights:")
 print(W)
+
+****************************************************************************************************************************
+****************************************************************************************************************************
+****************************************************************************************************************************
+****************************************************************************************************************************
+
+
+import numpy as np  # Import NumPy for numerical computations
+
+# Define parameters
+num_input = 4  # Number of input neurons
+num_output = 2  # Number of output neurons
+rho = 0.7  # Vigilance parameter
+theta = 0.5  # Matching parameter
+
+# Initialize weights
+W = np.random.rand(num_output, num_input) * 0.1  # Initialize weight matrix
+bias = np.random.rand(num_output) * 0.1  # Initialize bias vector
+
+# Input data
+X = np.array([[0, 1, 1, 0],
+              [1, 0, 1, 0],
+              [0, 0, 1, 1]])
+
+# Function to calculate the activation
+def calculate_activation(input_data):
+    activations = np.dot(W, input_data) + bias  # Compute the activations
+    return activations  # Return the activations
+
+# Function to normalize the activations
+def normalize_activations(activations):
+    normalized_activations = activations / np.sum(activations)  # Normalize the activations
+    return normalized_activations  # Return normalized activations
+
+# Function to find the winning neuron
+def find_winner(activations):
+    return np.argmax(activations)  # Return the index of the neuron with the highest activation
+
+# Function to update weights
+def update_weights(input_data, winner):
+    W[winner] = np.maximum(W[winner], input_data)  # Update weights of the winning neuron
+    return W  # Return updated weights
+
+# Function to check vigilance
+def check_vigilance(input_data, winner):
+    return np.dot(W[winner], input_data) / np.sum(W[winner])  # Compute vigilance level
+
+# Main loop
+for i in range(X.shape[0]):
+    input_data = X[i]  # Get input data
+    activations = calculate_activation(input_data)  # Calculate activations
+    normalized_activations = normalize_activations(activations)  # Normalize activations
+    winner = find_winner(normalized_activations)  # Find the winning neuron
+    
+    if np.max(normalized_activations) < theta:  # Check if a winner is found
+        print("No winner found. Creating new cluster.")  # Print message for creating a new cluster
+        W = np.vstack([W, input_data])  # Add input data as a new neuron
+        bias = np.append(bias, 0.1)  # Add bias for the new neuron
+        num_output += 1  # Increment the number of output neurons
+    else:
+        vigilance = check_vigilance(input_data, winner)  # Calculate vigilance level
+        if vigilance > rho:  # Check if input is accepted into the cluster
+            print("Input accepted into cluster", winner)  # Print message for input acceptance
+            W = update_weights(input_data, winner)  # Update weights for the winning neuron
+        else:
+            print("Input rejected. Creating new cluster.")  # Print message for creating a new cluster
+            W = np.vstack([W, input_data])  # Add input data as a new neuron
+            bias = np.append(bias, 0.1)  # Add bias for the new neuron
+            num_output += 1  # Increment the number of output neurons
+
+/********************************* RUN ******************************************/
+
+# Print final weights
+print("Final weights:")
+print(W)
